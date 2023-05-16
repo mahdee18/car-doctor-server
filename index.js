@@ -23,6 +23,24 @@ const client = new MongoClient(uri, {
     }
 });
 
+const verifyJWT =(req,res,next)=>{
+    console.log('JWT is hitting!!')
+    console.log(req.headers.authorization)
+    const authorization =req.headers.authorization;
+    if(!authorization){
+        return res.status(401).send({error: true, message:'unauthorize'})
+    }
+    const token = authorization.split(' ')[1]
+    console.log('token', token)
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET,(error,decoded)=>{
+        if(error){
+            return res.status(403).send({error:true,message:'unauthorized access'})
+        }
+        req.decoded=decoded;
+        next()
+    })
+}
+
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
@@ -60,7 +78,8 @@ async function run() {
 
         // Services book
 
-        app.get('/servicesBook',async(req,res)=>{
+        app.get('/servicesBook',verifyJWT, async(req,res)=>{
+            
             let query = {}
             if(req.query?.email){
                 query= {email: req.query.email}
