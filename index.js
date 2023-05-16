@@ -12,7 +12,6 @@ app.use(express.json())
 
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ftqixdj.mongodb.net/?retryWrites=true&w=majority`;
-console.log(uri)
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -67,6 +66,26 @@ async function run() {
             res.send(result)
         })
 
+        app.patch("/servicesBook/:id", async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const updatedBookings = req.body;
+            const updateDoc = {
+                $set: {
+                   status : updatedBookings.status
+                },
+            };
+            const result = await serviceBookCollection.updateOne(filter,updateDoc);
+            res.send(result);
+
+        })
+
+        app.delete('/servicesBook/:id',async(req,res)=>{
+            const id = req.params.id;
+            const query = {_id: new ObjectId(id)}
+            const result = await serviceBookCollection.deleteOne(query)
+            res.send(result);
+        })
 
 
         // Send a ping to confirm a successful connection
