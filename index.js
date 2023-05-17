@@ -24,14 +24,11 @@ const client = new MongoClient(uri, {
 });
 
 const verifyJWT =(req,res,next)=>{
-    console.log('JWT is hitting!!')
-    console.log(req.headers.authorization)
     const authorization =req.headers.authorization;
     if(!authorization){
         return res.status(401).send({error: true, message:'unauthorize'})
     }
     const token = authorization.split(' ')[1]
-    console.log('token', token)
     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET,(error,decoded)=>{
         if(error){
             return res.status(403).send({error:true,message:'unauthorized access'})
@@ -53,7 +50,6 @@ async function run() {
 
         app.post('/jwt',(req,res)=>{
             const user = req.body;
-            console.log(user)
             const token = jwt.sign(user,process.env.ACCESS_TOKEN_SECRET, {
                 expiresIn:'1h'
 
@@ -79,7 +75,11 @@ async function run() {
         // Services book
 
         app.get('/servicesBook',verifyJWT, async(req,res)=>{
-            
+            const decoded = req.decoded
+            console.log('Comeback',decoded.email,req.email)
+            if(decoded.email !== req.query.email){
+                return res.status(403).send({error: 1, message:'forbidden access'})
+            }
             let query = {}
             if(req.query?.email){
                 query= {email: req.query.email}
@@ -91,7 +91,6 @@ async function run() {
 
         app.post('/servicesBook',async(req,res)=>{
             const booking = req.body;
-            console.log(booking)
             const result = await serviceBookCollection.insertOne(booking)
             res.send(result)
         })
